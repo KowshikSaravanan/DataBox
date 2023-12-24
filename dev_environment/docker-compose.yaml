@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # Airflow setup
+  airflow-webserver:
+    image: apache/airflow:latest
+    restart: always
+    depends_on:
+      - postgres_airflow
+    environment:
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres_airflow/airflow
+    ports:
+      - "8080:8080"
+    command: webserver
+    volumes:
+      - airflow_data:/opt/airflow
+
+  airflow-scheduler:
+    image: apache/airflow:latest
+    restart: always
+    depends_on:
+      - postgres_airflow
+    environment:
+      - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres_airflow/airflow
+    command: scheduler
+    volumes:
+      - airflow_data:/opt/airflow
+
+  postgres_airflow:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+
+  # dbt setup
+  dbt:
+    image: fishtownanalytics/dbt:0.21.0
+    restart: always
+    depends_on:
+      - postgres_dbt
+    environment:
+      - DBT_PROFILES_DIR=/root/.dbt
+    volumes:
+      - dbt_data:/root/.dbt
+
+  postgres_dbt:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_USER=dbt
+      - POSTGRES_PASSWORD=dbt
+      - POSTGRES_DB=dbt
+
+  # Jenkins setup
+  jenkins:
+    image: jenkins/jenkins:lts
+    restart: always
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+
+volumes:
+  airflow_data:
+  dbt_data:
