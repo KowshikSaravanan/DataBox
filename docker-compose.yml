@@ -33,7 +33,7 @@ services:
       - ./dags:/opt/airflow/dags
 
   dbt:
-    image: fishtownanalytics/dbt:latest
+    image: fishtownanalytics/dbt:0.21.0
     depends_on:
       - postgres
     environment:
